@@ -1,0 +1,19 @@
+# Backend
+backend/target/
+backend/.mvn/
+backend/*.log
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Geral
+.env
+*.log
+.DS_Store
+.idea/
+*.iml
+.vscode/settings.json
