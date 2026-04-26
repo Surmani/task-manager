@@ -11,6 +11,7 @@ import com.taskmanager.dto.response.TaskResponse;
 import com.taskmanager.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/projects/{projectId}/tasks")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Tasks", description = "Task management endpoints")
 public class TaskController {
 
