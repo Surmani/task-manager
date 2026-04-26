@@ -22,23 +22,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("TaskHistoryRepository - Testes de Integração")
+@DisplayName("TaskHistoryRepository - Integration Tests")
 class TaskHistoryRepositoryTest {
 
-    @Autowired
-    private TaskHistoryRepository taskHistoryRepository;
-
-    @Autowired
-    private TaskRepository taskRepository;
-
-    @Autowired
-    private ProjectRepository projectRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired TaskHistoryRepository taskHistoryRepository;
+    @Autowired TaskRepository taskRepository;
+    @Autowired ProjectRepository projectRepository;
+    @Autowired UserRepository userRepository;
 
     private User owner;
-    private Project project;
     private Task task;
 
     @BeforeEach
@@ -52,25 +44,23 @@ class TaskHistoryRepositoryTest {
                 .name("Owner").email("owner@test.com")
                 .password("123").role(UserRole.ADMIN).build());
 
-        project = projectRepository.save(Project.builder()
-                .name("Projeto").description("Desc")
-                .owner(owner).build());
+        Project project = projectRepository.save(Project.builder()
+                .name("Project").description("Desc").owner(owner).build());
 
         task = taskRepository.save(Task.builder()
-                .title("Task Teste").description("Desc")
+                .title("Task").description("Desc")
                 .status(TaskStatus.TODO).priority(Priority.MEDIUM)
                 .project(project).creator(owner).build());
     }
 
     @Test
-    @DisplayName("Deve retornar histórico ordenado por changedAt desc")
+    @DisplayName("Should return history ordered by changedAt descending")
     void shouldReturnHistoryOrderedByChangedAtDesc() throws InterruptedException {
         taskHistoryRepository.save(TaskHistory.builder()
                 .task(task).changedBy(owner)
                 .field("status").oldValue("TODO").newValue("IN_PROGRESS")
                 .build());
 
-        // Garante timestamps diferentes entre os registros
         Thread.sleep(50);
 
         taskHistoryRepository.save(TaskHistory.builder()
@@ -82,13 +72,12 @@ class TaskHistoryRepositoryTest {
                 .findByTaskIdOrderByChangedAtDesc(task.getId());
 
         assertThat(result).hasSize(2);
-        // O mais recente (priority) deve vir primeiro
         assertThat(result.get(0).getField()).isEqualTo("priority");
         assertThat(result.get(1).getField()).isEqualTo("status");
     }
 
     @Test
-    @DisplayName("Deve retornar lista vazia quando task não possuir histórico")
+    @DisplayName("Should return empty list when task has no history")
     void shouldReturnEmptyWhenTaskHasNoHistory() {
         List<TaskHistory> result = taskHistoryRepository
                 .findByTaskIdOrderByChangedAtDesc(task.getId());
@@ -97,22 +86,20 @@ class TaskHistoryRepositoryTest {
     }
 
     @Test
-    @DisplayName("Não deve retornar histórico de outra task")
+    @DisplayName("Should not return history from another task")
     void shouldNotReturnHistoryFromAnotherTask() {
         Task task2 = taskRepository.save(Task.builder()
                 .title("Task 2").description("Desc")
                 .status(TaskStatus.TODO).priority(Priority.MEDIUM)
-                .project(project).creator(owner).build());
+                .project(task.getProject()).creator(owner).build());
 
         taskHistoryRepository.save(TaskHistory.builder()
                 .task(task).changedBy(owner)
-                .field("status").oldValue("TODO").newValue("DONE")
-                .build());
+                .field("status").oldValue("TODO").newValue("DONE").build());
 
         taskHistoryRepository.save(TaskHistory.builder()
                 .task(task2).changedBy(owner)
-                .field("priority").oldValue("LOW").newValue("HIGH")
-                .build());
+                .field("priority").oldValue("LOW").newValue("HIGH").build());
 
         List<TaskHistory> result = taskHistoryRepository
                 .findByTaskIdOrderByChangedAtDesc(task.getId());

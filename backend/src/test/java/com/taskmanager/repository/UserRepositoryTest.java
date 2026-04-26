@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("UserRepository - Testes de Integração")
+@DisplayName("UserRepository - Integration Tests")
 class UserRepositoryTest {
 
     @Autowired
@@ -30,7 +30,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar usuário por email")
+    @DisplayName("Should find user by email")
     void shouldFindByEmail() {
         persistUser("Lucas", "lucas@email.com", UserRole.ADMIN);
 
@@ -42,15 +42,15 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve retornar vazio ao buscar email inexistente")
+    @DisplayName("Should return empty when email does not exist")
     void shouldReturnEmptyWhenEmailNotFound() {
-        Optional<User> result = userRepository.findByEmail("naoexiste@email.com");
+        Optional<User> result = userRepository.findByEmail("notfound@email.com");
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("Deve validar existência por email")
+    @DisplayName("Should return true when email exists")
     void shouldExistsByEmail() {
         persistUser("Lucas", "lucas@email.com", UserRole.MEMBER);
 
@@ -60,7 +60,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve retornar falso quando email não existir")
+    @DisplayName("Should return false when email does not exist")
     void shouldReturnFalseWhenEmailDoesNotExist() {
         boolean exists = userRepository.existsByEmail("fake@email.com");
 
@@ -68,7 +68,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar por parte do email ignorando case")
+    @DisplayName("Should search by email ignoring case")
     void shouldSearchByEmailIgnoringCase() {
         persistUser("Lucas Surmani", "Lucas.Surmani@email.com", UserRole.ADMIN);
         persistUser("Ana Silva", "ana@email.com", UserRole.MEMBER);
@@ -83,7 +83,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar por parte do nome ignorando case")
+    @DisplayName("Should search by name ignoring case")
     void shouldSearchByNameIgnoringCase() {
         persistUser("Lucas Surmani", "lucas@email.com", UserRole.ADMIN);
         persistUser("Carlos Souza", "carlos@email.com", UserRole.MEMBER);
@@ -98,7 +98,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar por email OU nome simultaneamente")
+    @DisplayName("Should search by email OR name simultaneously")
     void shouldSearchByEmailOrName() {
         persistUser("Lucas Surmani", "lucas@email.com", UserRole.ADMIN);
         persistUser("Ana Souza", "ana@email.com", UserRole.MEMBER);
@@ -107,12 +107,11 @@ class UserRepositoryTest {
         List<User> result = userRepository
                 .findByEmailContainingIgnoreCaseOrNameContainingIgnoreCase("ana", "lucas");
 
-        // "ana" bate no email de Ana e no nome de Pedro Lucas e Lucas Surmani
         assertThat(result).hasSize(3);
     }
 
     @Test
-    @DisplayName("Deve retornar lista vazia quando não encontrar")
+    @DisplayName("Should return empty list when search finds nothing")
     void shouldReturnEmptyListWhenSearchFails() {
         persistUser("Lucas", "lucas@email.com", UserRole.ADMIN);
 
@@ -124,10 +123,8 @@ class UserRepositoryTest {
 
     private User persistUser(String name, String email, UserRole role) {
         return userRepository.save(User.builder()
-                .name(name)
-                .email(email)
-                .password("encoded_password")
-                .role(role)
+                .name(name).email(email)
+                .password("encoded_password").role(role)
                 .build());
     }
 }

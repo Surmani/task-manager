@@ -19,14 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("ProjectRepository - Testes de Integração")
+@DisplayName("ProjectRepository - Integration Tests")
 class ProjectRepositoryTest {
 
-    @Autowired
-    private ProjectRepository projectRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired ProjectRepository projectRepository;
+    @Autowired UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -35,58 +32,41 @@ class ProjectRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar projetos onde usuário é owner ou member")
+    @DisplayName("Should find projects where user is owner or member")
     void shouldFindAllByMemberOrOwner() {
-        User owner = persistUser("Lucas Owner", "owner@email.com", UserRole.ADMIN);
-        User member = persistUser("Lucas Member", "member@email.com", UserRole.MEMBER);
+        User owner = persistUser("Owner", "owner@email.com", UserRole.ADMIN);
         User outsider = persistUser("Outsider", "outsider@email.com", UserRole.MEMBER);
 
-        Project projectOwned = Project.builder()
-                .name("Projeto Owner")
-                .description("Usuário dono")
-                .owner(owner)
-                .build();
+        Project projectOwned = projectRepository.save(Project.builder()
+                .name("Owned Project").description("desc").owner(owner).build());
 
         Project projectAsMember = Project.builder()
-                .name("Projeto Member")
-                .description("Usuário membro")
-                .owner(outsider)
-                .build();
+                .name("Member Project").description("desc").owner(outsider).build();
         projectAsMember.getMembers().add(owner);
-
-        Project unrelated = Project.builder()
-                .name("Projeto Sem Relação")
-                .description("Não deve retornar")
-                .owner(outsider)
-                .build();
-
-        projectRepository.save(projectOwned);
         projectRepository.save(projectAsMember);
-        projectRepository.save(unrelated);
+
+        projectRepository.save(Project.builder()
+                .name("Unrelated Project").description("desc").owner(outsider).build());
 
         List<Project> result = projectRepository.findAllByMemberOrOwner(owner.getId());
 
         assertThat(result)
                 .hasSize(2)
                 .extracting(Project::getName)
-                .containsExactlyInAnyOrder("Projeto Owner", "Projeto Member");
+                .containsExactlyInAnyOrder("Owned Project", "Member Project");
     }
 
     @Test
-    @DisplayName("Deve buscar projeto por id com members carregados")
+    @DisplayName("Should find project by id with members loaded")
     void shouldFindByIdWithMembers() {
         User owner = persistUser("Owner", "owner@test.com", UserRole.ADMIN);
         User member1 = persistUser("Member 1", "member1@test.com", UserRole.MEMBER);
         User member2 = persistUser("Member 2", "member2@test.com", UserRole.MEMBER);
 
         Project project = Project.builder()
-                .name("Projeto Teste")
-                .description("Descrição")
-                .owner(owner)
-                .build();
+                .name("Project").description("desc").owner(owner).build();
         project.getMembers().add(member1);
         project.getMembers().add(member2);
-
         projectRepository.save(project);
 
         Optional<Project> result = projectRepository.findByIdWithMembers(project.getId());
@@ -99,7 +79,7 @@ class ProjectRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve retornar vazio quando id não existir")
+    @DisplayName("Should return empty when project id does not exist")
     void shouldReturnEmptyWhenIdDoesNotExist() {
         Optional<Project> result = projectRepository.findByIdWithMembers(999L);
         assertThat(result).isEmpty();
@@ -108,7 +88,6 @@ class ProjectRepositoryTest {
     private User persistUser(String name, String email, UserRole role) {
         return userRepository.save(User.builder()
                 .name(name).email(email)
-                .password("encoded_password").role(role)
-                .build());
+                .password("encoded_password").role(role).build());
     }
 }

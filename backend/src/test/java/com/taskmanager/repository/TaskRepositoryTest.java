@@ -21,17 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("TaskRepository - Testes de Integração")
+@DisplayName("TaskRepository - Integration Tests")
 class TaskRepositoryTest {
 
-    @Autowired
-    private TaskRepository taskRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ProjectRepository projectRepository;
+    @Autowired TaskRepository taskRepository;
+    @Autowired UserRepository userRepository;
+    @Autowired ProjectRepository projectRepository;
 
     private User owner;
     private User assignee;
@@ -52,16 +47,15 @@ class TaskRepositoryTest {
                 .password("123").role(UserRole.MEMBER).build());
 
         project = projectRepository.save(Project.builder()
-                .name("Projeto A").description("Desc")
-                .owner(owner).build());
+                .name("Project A").description("Desc").owner(owner).build());
     }
 
     @Test
-    @DisplayName("Deve contar tasks IN_PROGRESS por assignee")
+    @DisplayName("Should count IN_PROGRESS tasks by assignee")
     void shouldCountByAssigneeIdAndStatus() {
-        persistTask("Task 1", "Desc 1", TaskStatus.IN_PROGRESS, assignee);
-        persistTask("Task 2", "Desc 2", TaskStatus.IN_PROGRESS, assignee);
-        persistTask("Task 3", "Desc 3", TaskStatus.DONE, assignee);
+        persistTask("Task 1", "Desc", TaskStatus.IN_PROGRESS, assignee);
+        persistTask("Task 2", "Desc", TaskStatus.IN_PROGRESS, assignee);
+        persistTask("Task 3", "Desc", TaskStatus.DONE, assignee);
 
         long count = taskRepository.countByAssigneeIdAndStatus(assignee.getId(), TaskStatus.IN_PROGRESS);
 
@@ -69,25 +63,25 @@ class TaskRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar tasks por texto no título ignorando case")
+    @DisplayName("Should search tasks by title text ignoring case")
     void shouldSearchByTitleText() {
-        persistTask("Corrigir Bug Login", "erro tela", TaskStatus.TODO, assignee);
-        persistTask("Criar Dashboard", "painel inicial", TaskStatus.TODO, assignee);
-        persistTask("Bug API", "ajustar retorno", TaskStatus.TODO, assignee);
+        persistTask("Fix Login Bug", "error screen", TaskStatus.TODO, assignee);
+        persistTask("Create Dashboard", "main panel", TaskStatus.TODO, assignee);
+        persistTask("Bug in API", "fix return", TaskStatus.TODO, assignee);
 
         Page<Task> page = taskRepository.searchByText(project.getId(), "bug", PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isEqualTo(2);
         assertThat(page.getContent())
                 .extracting(Task::getTitle)
-                .containsExactlyInAnyOrder("Corrigir Bug Login", "Bug API");
+                .containsExactlyInAnyOrder("Fix Login Bug", "Bug in API");
     }
 
     @Test
-    @DisplayName("Deve buscar tasks por texto na descrição")
+    @DisplayName("Should search tasks by description text")
     void shouldSearchByDescriptionText() {
-        persistTask("Task 1", "Problema no login", TaskStatus.TODO, assignee);
-        persistTask("Task 2", "Criar tela nova", TaskStatus.TODO, assignee);
+        persistTask("Task 1", "Problem in login", TaskStatus.TODO, assignee);
+        persistTask("Task 2", "Create new screen", TaskStatus.TODO, assignee);
 
         Page<Task> page = taskRepository.searchByText(project.getId(), "login", PageRequest.of(0, 10));
 
@@ -96,16 +90,14 @@ class TaskRepositoryTest {
     }
 
     @Test
-    @DisplayName("Não deve retornar tasks de outro projeto")
+    @DisplayName("Should not return tasks from another project")
     void shouldNotReturnTasksFromAnotherProject() {
         Project project2 = projectRepository.save(Project.builder()
-                .name("Projeto 2").description("Outro")
-                .owner(owner).build());
+                .name("Project 2").description("Other").owner(owner).build());
 
-        persistTask("Bug projeto 1", "erro", TaskStatus.TODO, assignee);
-
+        persistTask("Bug in project 1", "error", TaskStatus.TODO, assignee);
         taskRepository.save(Task.builder()
-                .title("Bug projeto 2").description("erro")
+                .title("Bug in project 2").description("error")
                 .status(TaskStatus.TODO).priority(Priority.MEDIUM)
                 .project(project2).assignee(assignee).creator(owner).build());
 
