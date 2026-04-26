@@ -80,7 +80,7 @@ class ProjectServiceTest {
 
         assertThatThrownBy(() -> projectService.getProjectAndCheckAccess(1L, outsider))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("do not belong");
+                .hasMessageContaining("não pertence");
     }
 
     @Test
@@ -112,13 +112,13 @@ class ProjectServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw not found when project does not exist")
+    @DisplayName("Should throw não encontrado when project does not exist")
     void findById_notFound_throwsBusinessException() {
         when(projectRepository.findByIdWithMembers(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> projectService.getProjectAndCheckAccess(99L, owner))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("not found");
+                .hasMessageContaining("não encontrado");
     }
 
     @Test

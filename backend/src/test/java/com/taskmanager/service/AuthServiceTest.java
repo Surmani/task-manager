@@ -72,7 +72,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Email already registered");
+                .hasMessageContaining("E-mail já cadastrado");
 
         verify(userRepository, never()).save(any());
     }

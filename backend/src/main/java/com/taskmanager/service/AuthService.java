@@ -34,7 +34,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw BusinessException.badRequest("Email already registered");
+            throw BusinessException.badRequest("E-mail já cadastrado");
         }
         var user = User.builder()
                 .name(request.name())

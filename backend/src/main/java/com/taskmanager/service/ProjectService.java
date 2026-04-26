@@ -62,21 +62,21 @@ public class ProjectService {
 
     public Project getProjectAndCheckAccess(Long projectId, User user) {
         var project = projectRepository.findByIdWithMembers(projectId)
-                .orElseThrow(() -> BusinessException.notFound("Project not found"));
+                .orElseThrow(() -> BusinessException.notFound("Projeto não encontrado"));
         boolean isOwner = project.getOwner().getId().equals(user.getId());
         boolean isMember = project.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(user.getId()));
         if (!isOwner && !isMember) {
-            throw BusinessException.forbidden("You do not belong to this project");
+            throw BusinessException.forbidden("Você não pertence a este projeto");
         }
         return project;
     }
 
     public Project getProjectAndCheckOwner(Long projectId, User user) {
         var project = projectRepository.findByIdWithMembers(projectId)
-                .orElseThrow(() -> BusinessException.notFound("Project not found"));
+                .orElseThrow(() -> BusinessException.notFound("Projeto não encontrado"));
         if (!project.getOwner().getId().equals(user.getId())) {
-            throw BusinessException.forbidden("Only the owner can perform this action");
+            throw BusinessException.forbidden("Apenas o dono pode realizar esta ação");
         }
         return project;
     }

@@ -187,12 +187,12 @@ public class TaskService {
     private void validateStatusTransition(TaskStatus current, TaskStatus next,
                                           User user, Priority priority, Project project) {
         if (current == TaskStatus.DONE && next == TaskStatus.TODO) {
-            throw BusinessException.badRequest("A DONE task cannot go back to TODO");
+            throw BusinessException.badRequest("Uma tarefa CONCLUÍDA não pode voltar para A FAZER");
         }
         if (next == TaskStatus.DONE && priority == Priority.CRITICAL) {
             boolean isOwner = project.getOwner().getId().equals(user.getId());
             if (!isOwner) {
-                throw BusinessException.forbidden("Only the project ADMIN can close CRITICAL tasks");
+                throw BusinessException.forbidden("Apenas o ADMIN do projeto pode concluir tarefas CRÍTICAS");
             }
         }
     }
@@ -201,24 +201,24 @@ public class TaskService {
         long count = taskRepository.countByAssigneeIdAndStatus(assignee.getId(), TaskStatus.IN_PROGRESS);
         if (count >= WIP_LIMIT) {
             throw BusinessException.badRequest(
-                    "WIP limit reached: " + assignee.getName() + " already has " + WIP_LIMIT + " tasks IN_PROGRESS");
+                    "Limite de WIP atingido: " + assignee.getName() + " já possui " + WIP_LIMIT + " tarefas IN_PROGRESS");
         }
     }
 
     private User resolveAssignee(Long assigneeId, Project project) {
         var assignee = userRepository.findById(assigneeId)
-                .orElseThrow(() -> BusinessException.notFound("Assignee not found"));
+                .orElseThrow(() -> BusinessException.notFound("Responsável não encontrado"));
         boolean isMember = project.getMembers().stream().anyMatch(m -> m.getId().equals(assigneeId));
         boolean isOwner = project.getOwner().getId().equals(assigneeId);
         if (!isMember && !isOwner) {
-            throw BusinessException.badRequest("Assignee is not a member of this project");
+            throw BusinessException.badRequest("Responsável não é membro deste projeto");
         }
         return assignee;
     }
 
     private Task getTask(Long id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> BusinessException.notFound("Task not found"));
+                .orElseThrow(() -> BusinessException.notFound("Tarefa não encontrada"));
     }
 
     private TaskHistory buildHistory(Task task, User user, String field, String oldVal, String newVal) {

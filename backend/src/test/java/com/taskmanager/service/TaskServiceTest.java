@@ -65,7 +65,7 @@ class TaskServiceTest {
 
         assertThatThrownBy(() -> taskService.update(1L, request, admin))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("cannot go back to TODO");
+                .hasMessageContaining("não pode voltar para A FAZER");
     }
 
     @Test
@@ -115,7 +115,7 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw when WIP limit is reached")
+    @DisplayName("Should throw when Limite de WIP is reached")
     void create_wipLimitReached_throwsBadRequest() {
         var request = new TaskRequest("New Task", null, Priority.MEDIUM, null, member.getId());
         when(projectService.getProjectAndCheckAccess(1L, admin)).thenReturn(project);
@@ -124,7 +124,7 @@ class TaskServiceTest {
 
         assertThatThrownBy(() -> taskService.create(1L, request, admin))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("WIP limit");
+                .hasMessageContaining("Limite de WIP");
     }
 
     @Test
@@ -137,7 +137,7 @@ class TaskServiceTest {
 
         assertThatThrownBy(() -> taskService.create(1L, request, admin))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("not a member");
+                .hasMessageContaining("não é membro");
     }
 
     @Test

@@ -148,7 +148,7 @@ class TaskControllerIntegrationTest {
                                         com.taskmanager.domain.enums.TaskStatus.TODO,
                                         null, null, null, null))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("A DONE task cannot go back to TODO"));
+                .andExpect(jsonPath("$.detail").value("Uma tarefa CONCLUÍDA não pode voltar para A FAZER"));
     }
 
     @Test
