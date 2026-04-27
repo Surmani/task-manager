@@ -17,3 +17,4 @@ frontend/.env.local
 .idea/
 *.iml
 .vscode/settings.json
+frontend/tsconfig.tsbuildinfo
