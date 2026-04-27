@@ -62,7 +62,7 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Email already registered"));
+                .andExpect(jsonPath("$.detail").value("E-mail já cadastrado"));
     }
 
     @Test

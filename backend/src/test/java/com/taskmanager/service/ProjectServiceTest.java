@@ -108,7 +108,7 @@ class ProjectServiceTest {
 
         assertThatThrownBy(() -> projectService.delete(1L, member))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("owner");
+                .hasMessageContaining("dono");
     }
 
     @Test
