@@ -7,50 +7,109 @@ Sistema de gerenciamento de tarefas para equipes de desenvolvimento, criado como
 **Backend:** Java 21, Spring Boot 3.4, Spring Security + JWT, PostgreSQL, JPA/Hibernate, SpringDoc OpenAPI  
 **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Zustand, @dnd-kit, React Router v6
 
+---
+
 ## Como rodar
 
-### Pré-requisitos
+### Opção 1 — Docker (recomendado, sem instalar Java ou Node)
 
-- Java 21
-- Maven 3.9+
-- Node 22+
-- Docker
+**Pré-requisito:** apenas Docker Desktop instalado.
 
-### 1. Iniciar o banco de dados
+```bash
+git clone git@github.com:Surmani/task-manager.git
+cd task-manager
+docker compose -f docker-compose.full.yml up --build
+```
 
+Aguarda todos os containers subirem (2-3 minutos no primeiro build) e acessa:
+
+- **App:** http://localhost
+- **Swagger:** http://localhost/api/swagger-ui.html
+
+Para parar:
+```bash
+docker compose -f docker-compose.full.yml down
+```
+
+---
+
+### Opção 2 — Rodar localmente (desenvolvimento)
+
+#### Pré-requisitos
+
+| Ferramenta | Versão | Download |
+|-----------|--------|---------|
+| Docker Desktop | Qualquer | https://www.docker.com/products/docker-desktop |
+| Java | 21 LTS | https://adoptium.net/temurin/releases/?version=21 |
+| Maven | 3.9+ | https://maven.apache.org/download.cgi |
+| Node.js | 22 LTS | https://nodejs.org |
+
+#### Instalação no Windows
+
+**Docker Desktop:**
+1. Baixa e instala o Docker Desktop
+2. Durante a instalação marca "Use WSL 2 backend"
+3. Reinicia o PC
+4. Verifica: `docker --version`
+
+**Java 21:**
+1. Acessa https://adoptium.net/temurin/releases/?version=21
+2. Baixa o `.msi` para Windows x64
+3. Instala normalmente (o instalador configura o PATH automaticamente)
+4. Verifica: `java -version`
+
+**Maven:**
+1. Acessa https://maven.apache.org/download.cgi
+2. Baixa o `apache-maven-3.9.x-bin.zip`
+3. Extrai em `C:\maven`
+4. Adiciona `C:\maven\bin` nas variáveis de ambiente do sistema (PATH)
+5. Verifica: `mvn -version`
+
+**Node.js 22:**
+1. Acessa https://nodejs.org
+2. Baixa o instalador LTS (v22)
+3. Instala normalmente
+4. Verifica: `node -v`
+
+#### Rodando o projeto
+
+```bash
+# Clona o repositório
+git clone git@github.com:Surmani/task-manager.git
+cd task-manager
+```
+
+**Terminal 1 — Banco de dados:**
 ```bash
 docker compose up -d
 ```
 
-### 2. Rodar o backend
-
+**Terminal 2 — Backend:**
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-API disponível em: `http://localhost:8080`  
-Swagger UI: `http://localhost:8080/swagger-ui.html`
-
-### 3. Rodar o frontend
-
+**Terminal 3 — Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-App disponível em: `http://localhost:5173`
+Acessa:
+- **App:** http://localhost:5173
+- **Swagger:** http://localhost:8080/swagger-ui.html
 
-### Variáveis de ambiente (opcional)
+#### Variáveis de ambiente (opcional)
 
-O segredo JWT possui um valor padrão seguro para desenvolvimento. Para sobrescrevê-lo, crie o arquivo `backend/.env`:
+O JWT secret tem um valor padrão seguro para desenvolvimento. Para usar o seu próprio:
 
-```env
-JWT_SECRET=seu_segredo_personalizado_com_pelo_menos_64_caracteres_para_segurança_hs512
+```bash
+# Cria o arquivo (nunca commitar este arquivo)
+cp backend/.env.example backend/.env
+# Edita com sua chave
 ```
-
-Um modelo está disponível em `backend/.env.example`.
 
 ---
 
@@ -74,7 +133,7 @@ Um modelo está disponível em `backend/.env.example`.
 | GET | `/api/users` | Listar usuários (somente ADMIN) |
 | GET | `/api/users/search` | Buscar usuários por nome ou e-mail (somente ADMIN) |
 
-Documentação interativa completa disponível em `http://localhost:8080/swagger-ui.html`.
+Documentação interativa completa disponível em `/api/swagger-ui.html`.
 
 ---
 
@@ -104,6 +163,9 @@ Cada alteração de campo em uma tarefa é registrada em `task_history` com o va
 ### ProblemDetail (RFC 7807)
 Utilizamos o `ProblemDetail` nativo do Spring Boot 3 para respostas de erro em vez de um DTO de erro customizado. Este é o formato padrão, não requer configuração extra e está de acordo com a RFC 7807. Avaliadores e consumidores da API recebem respostas de erro consistentes e estruturadas em todos os endpoints.
 
+### Docker Multi-stage Build
+Tanto o backend quanto o frontend usam builds multi-stage. O backend compila com Maven e gera um JAR, depois copia apenas o JAR para uma imagem JRE enxuta. O frontend compila com Node e serve os arquivos estáticos via Nginx. O resultado são imagens de produção menores e mais seguras.
+
 ---
 
 ## Estratégia de Testes
@@ -113,7 +175,8 @@ Utilizamos o `ProblemDetail` nativo do Spring Boot 3 para respostas de erro em v
 | Repositório | `@SpringBootTest` + H2 | 17 testes |
 | Service | JUnit 5 + Mockito | 16 testes |
 | Controller | `@SpringBootTest` + MockMvc | 26 testes |
-| **Total** | | **59 testes** |
+| Componente React | Vitest + Testing Library | 12 testes |
+| **Total** | | **71 testes** |
 
 **Por que `@SpringBootTest` nos repositórios em vez de `@DataJpaTest`?**  
 O `@DataJpaTest` é mais rápido mas usa H2 por padrão e carrega apenas o contexto JPA. O `@SpringBootTest` com o perfil de teste sobe o contexto completo e detecta problemas de integração que o `@DataJpaTest` poderia não capturar.
@@ -123,10 +186,8 @@ O `@DataJpaTest` é mais rápido mas usa H2 por padrão e carrega apenas o conte
 ## O que Faria Diferente com Mais Tempo
 
 - **Cache com Redis** na listagem de tarefas e relatórios, com invalidação por projeto a cada mutação de tarefa
-- **WebSocket** para notificações em tempo real quando uma tarefa é atribuída ao usuário logado, em vez de depender de atualizações manuais
-- **Busca textual com PostgreSQL `tsvector`** em vez de queries LIKE — indexada, sensível ao idioma e significativamente mais rápida em escala
-- **Docker multi-stage build** para o backend, produzindo uma imagem de produção enxuta
-- **Pipeline CI/CD com GitHub Actions** rodando testes e lint a cada pull request
+- **WebSocket** para notificações em tempo real quando uma tarefa é atribuída ao usuário logado
+- **Busca textual com PostgreSQL `tsvector`** em vez de queries LIKE — indexada e significativamente mais rápida em escala
 - **Testes E2E com Playwright** cobrindo o fluxo crítico: login → criar projeto → criar tarefa → arrastar para concluído
 - **Mecanismo de refresh token** para evitar forçar o usuário a fazer login novamente após o vencimento do JWT
-- **Guardas de rota baseados em permissão** no frontend com um sistema mais granular além do binário ADMIN/MEMBER atual
+- **Pipeline CI/CD com GitHub Actions** rodando testes e lint a cada pull request
